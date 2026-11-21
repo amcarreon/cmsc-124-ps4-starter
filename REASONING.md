@@ -32,35 +32,35 @@ nothing and the search ends after one answer.
 
 ## P01
 
-Write one to three sentences here. Name the rule that fixes each field.
+The `parent/2` facts are tried in source order, so `parent(tom,liz)` binds `X` to `liz` first and `parent(tom,bob)` is the next answer. There are exactly two matching facts, so the search then fails and the count is 2.
 
 ## P02
 
-Write one to three sentences here. Name the rule that fixes each field.
+The query unifies with the fact `parent(tom,bob)`, so the ground goal succeeds once. No other clause can produce another proof for this fact, so there is no second answer and the count is 1.
 
 ## P03
 
-Write one to three sentences here. Name the rule that fixes each field.
+No `parent/2` fact has `tom` as its second argument, so unification with every parent fact fails. The query has no solutions, giving `false`, `none`, and a count of 0.
 
 ## P04
 
-Write one to three sentences here. Name the rule that fixes each field.
+The first unification makes `X` identical to `f(Y,a)`; the following goal `Y=b` then binds the variable inside that term. The resulting single answer is `X=f(b,a),Y=b`, and there is no alternative unification.
 
 ## P05
 
-Write one to three sentences here. Name the rule that fixes each field.
+Unifying the two compound terms matches their `f/2` functors and then unifies corresponding arguments, binding `X=a` and `Y=b`. This is one successful unification with no alternative, so the count is 1.
 
 ## P06
 
-Write one to three sentences here. Name the rule that fixes each field.
+The distinct atoms `a` and `b` cannot be made identical by unification, so the goal fails immediately. There are no bindings or alternative clauses, hence no second answer and a count of 0.
 
 ## P07
 
-Write one to three sentences here. Name the rule that fixes each field.
+The `grandparent/2` body first tries `parent(tom,P)` and then `parent(P,X)`: `P=liz` has no children, while `P=bob` produces `X=ann` followed by `X=pat`. Fact order therefore gives two answers and then exhaustion.
 
 ## P08
 
-Write one to three sentences here. Name the rule that fixes each field.
+The base `ancestor/2` clause first returns Tom’s direct children, `liz` and `bob`. The recursive clause then follows Tom’s children in fact order: Liz has no descendants, while Bob’s descendants are `ann`, `pat`, `sue`, and `jim`, giving six answers total in the order `liz`, `bob`, `ann`, `pat`, `sue`, `jim`.
 
 ## P09
 
