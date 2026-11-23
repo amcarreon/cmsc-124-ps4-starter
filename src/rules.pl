@@ -64,5 +64,19 @@ last_of([_, H|T], X):-      % recursive clause: drops the first element,
 % the cycle a -> b -> c -> a always offers one more edge. Carry the nodes
 % you visited. Refuse to step onto one again. \+ Goal is true when Goal
 % cannot be proved. That is how you say "not yet visited."
-route(_, _, _) :-
-    throw(not_implemented(route/3)).
+route(X, Y, P) :-
+    travel(X, Y, [X], P).   % Visited is the current node
+    
+% travel(From, To, Visited, Path): Visited holds every node visited so far,
+% there we check if we already went on the node
+% Base case is when From and To are the same, so the path is itself
+travel(X, X, _, [X]).
+
+% Recursive clause: takes one edge(From, Next) and refuses to continue if 
+% the Next is already in Visited using \+ elem(Next, Visited). Recurses
+% from the Next which is Z to the new Next node Y, adds the node Z to Visited, then 
+% travels to the following nodes on route of From to To repeats until base case
+travel(X, Y, V, [X|NV]):-   % [X|NV] is the path from X to the path of next
+    edge(X, Z),
+    \+ elem(Z, V),
+    travel(Z, Y, [Z|V], NV).
