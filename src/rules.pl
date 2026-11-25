@@ -52,13 +52,19 @@ count_of(X, [H|T], N) :-
 
 % rev(List, Reversed): Reversed holds the elements of List in the other
 % order. Reverse the tail. Then use join/3 to put the head at the end.
-rev(_, _) :-
-    throw(not_implemented(rev/2)).
+rev([], []).                % empty list reversed is just empty list
+rev([X], [X]).              % base case: reversed of 1-element list is itself
+rev([H|T], R):-             % recursive clause: gets the head and tail,
+    rev(T, RT),             % reverses the tail
+    join(RT, [H], R).       % joins head at the end of reversed tail
 
 % last_of(List, X): X is the last element of List. The empty list has no
 % last element, so last_of([], X) must fail.
-last_of(_, _) :-
-    throw(not_implemented(last_of/2)).
+last_of([X], X).            % base case: last element of 1-element list is itself
+last_of([_, H|T], X):-      % recursive clause: drops the first element,
+    last_of([H|T], X).      % and recurses list of the remaining elements
+                            % until the last element remains at base case
+
 
 %%% R3 -- the graph.
 
@@ -70,5 +76,19 @@ last_of(_, _) :-
 % the cycle a -> b -> c -> a always offers one more edge. Carry the nodes
 % you visited. Refuse to step onto one again. \+ Goal is true when Goal
 % cannot be proved. That is how you say "not yet visited."
-route(_, _, _) :-
-    throw(not_implemented(route/3)).
+route(X, Y, P) :-
+    travel(X, Y, [X], P).   % Visited is the current node
+    
+% travel(From, To, Visited, Path): Visited holds every node visited so far,
+% there we check if we already went on the node
+% Base case is when From and To are the same, so the path is itself
+travel(X, X, _, [X]).
+
+% Recursive clause: takes one edge(From, Next) and refuses to continue if 
+% the Next is already in Visited using \+ elem(Next, Visited). Recurses
+% from the Next which is Z to the new Next node Y, adds the node Z to Visited, then 
+% travels to the following nodes on route of From to To repeats until base case
+travel(X, Y, V, [X|NV]):-   % [X|NV] is the path from X to the path of next
+    edge(X, Z),
+    \+ elem(Z, V),
+    travel(Z, Y, [Z|V], NV).
