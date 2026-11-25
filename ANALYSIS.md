@@ -1,13 +1,7 @@
 # The Search and the Stack
 
-Replace this paragraph after your checks pass. Paste the output of `./trace`
-for one case. Then answer three questions about it.
-
-## Trace: P08 — `ancestor(tom, X)`
-
-P08 asks Prolog to find every ancestor-related answer for `tom`. In the starter knowledge base, `ancestor/2` has its direct-parent clause first and its recursive clause second. The trace below follows the facts and the four-port tracer in `scripts/trace_case.pl`.
-
-```text
+`./trace` of `ancestor/2`
+```
 == trace P08 ==
 Call: ancestor(tom,X)
   Call: parent(tom,X)
@@ -105,52 +99,17 @@ Redo: ancestor(tom,jim)
   Redo: parent(tom,bob)
   Fail: parent(tom,_)
 Fail: ancestor(tom,X)
-== 6 answers ==
+== 6 answers == 
 ```
 
-- Which of its lines push a frame onto Activity 15's runtime stack? Which
-  lines pop one?
+`Call` line indicates a goal or a fresh frame being pushed onto the runtime stack. For instance, `Call: ancestor(tom,X)` is the main query, the inner `Call` for `parent/2` and recursive `ancestor/2` are the nested goals to solve the main. `Exit` line means a successful return from that call; hence, popping frames after return. `Fail` line is an attempted goal without an answer due to lack of information in knowledge base, still popping the frame. `Redo` line searches for other possible answers in that particular query after backtracking and finds another available clause or fact to explore. For example, after `parent(tom,X)` first succeeds with `X=liz`, `Redo: parent(tom,liz)` indicates that Prolog is looking for another match. It then finds `X=bob`. The recursive `ancestor/2` calls also redo when Prolog needs to explore another parent branch.
 
-Each `Call` line marks a goal being entered for the first time. It corresponds to pushing a fresh activation frame for that goal, with its arguments and the information needed to continue after the goal finishes. For example, `Call: ancestor(tom,X)` enters the main query, and the indented `Call` lines enter the `parent/2` and recursive `ancestor/2` goals used to solve it. The indentation shows how deeply a goal is nested under the query.
+In contrast with Act15, A returned frame has finished and been popped; its locally saved state cannot run an alternative. In here, it preserves the remaining alternatives and the state needed to backtrack. Therefore, `Redo` represents resuming a saved search, not starting a completely new call.
 
-An `Exit` line marks a successful return from that goal, so it corresponds conceptually to popping its active frame after producing a solution. A `Fail` line marks that the goal has no remaining clause that can succeed; that unsuccessful attempt also finishes and its active frame is removed. The trace contains multiple `Exit` and `Redo` events for the same goal because Prolog searches for more than one answer. These ports describe the logical search; they do not show every physical stack operation of a particular Prolog implementation.
+The difference is the position and structure of the recursive call. For `reach(a,d)`, it immediately goes through the recursive call of `reach(a,Z)`. Without the checking of the base case clause to find an edge first, it will repeatedly call the recursion due to the same pattern it reaches without any binding of `Z`. This results in an unbounded outcome. With base clause first, Prolog can check the edge first, and recurse from there to produce an answer. The graph contains a cycle, so further backtracking can still continue searching around that cycle.
 
-- What does a `Redo` line resume that a returned frame cannot?
+The recursion checks for the binding of `P` first before proceeding with the recursive call of `ancestor(P,D)`. Hence, it moves from one parent to another based on the hierarchy. Since it is finite and the clause order checks for the base clause first, it will not result in an unbounded solution, and gives 6 answers for `ancestor(tom,X)`.
 
-A `Redo` line resumes a goal's unfinished search for additional solutions. Prolog returns to the choice point for that goal, restores the variable bindings needed for that point, and tries another available clause or fact. For example, after `parent(tom,X)` first succeeds with `X=liz`, `Redo: parent(tom,liz)` indicates that Prolog is looking for another matching parent fact. It then finds `X=bob`. The recursive `ancestor/2` calls also redo when Prolog needs to explore another parent branch.
+The base case first of P08 is `liz`, `bob`, `ann`, `pat`, `sue`, and `jim`. While recursive clause first is the same but different order: `sue`, `jim`, `ann`, `pat`, `liz`, and `bob`.
 
-This is different from an ordinary return in Activity 15. A normally returned frame has finished and been popped; its local activation record cannot simply be resumed to try another alternative. Prolog's choice point preserves the remaining alternatives and the state needed to backtrack to them. Therefore, `Redo` represents resuming a saved search, not starting a completely new call.
-
-- Why does swapping the two clauses of `reach/2` change whether the search
-  ever answers, while swapping the two clauses of `ancestor/2` only changes
-  the order of the answers?
-
-The difference is the position and structure of the recursive call.
-
-In the starter knowledge base, `reach/2` is defined with its recursive clause first:
-
-```prolog
-reach(X, Y) :-
-    reach(X, Z),
-    edge(Z, Y).
-reach(X, Y) :-
-    edge(X, Y).
-```
-
-For `reach(a,d)`, Prolog enters the first clause and immediately calls `reach(a,Z)` again. That recursive call happens before the rule checks an `edge/2` fact that could bind `Z` and move the search forward. Because Prolog uses depth-first, left-to-right search, it keeps following the same left-recursive pattern and does not reach the second, direct-edge clause. It can therefore loop without producing an answer. If the direct-edge clause is placed first, Prolog can test an edge before recursing and can follow the path `a -> b -> c -> d` to produce an answer. The graph contains a cycle, so further backtracking can still continue searching around that cycle.
-
-The `ancestor/2` clauses have a different structure:
-
-```prolog
-ancestor(A, D) :-
-    parent(A, D).
-ancestor(A, D) :-
-    parent(A, P),
-    ancestor(P, D).
-```
-
-The recursive clause first calls `parent(A,P)`. This checks the finite family facts and binds `P` before the recursive `ancestor(P,D)` call is made. Each recursive step therefore moves to a parent in the family hierarchy rather than immediately calling the same unbound goal again. Since the family relationships are finite and contain no cycle, both clause orders can finish and find the same six answers for `ancestor(tom,X)`. Putting the recursive clause first changes which branch is explored first, so it changes the answer order, but it does not create the non-terminating left recursion seen in `reach/2`.
-
-For P08, the base-clause-first order returns `liz`, `bob`, `ann`, `pat`, `sue`, and `jim`. With the recursive clause first, the same set is reached in a different order: `sue`, `jim`, `ann`, `pat`, `liz`, and `bob`.
-
-The connection to Activity 15 is that each `Call` represents an active goal with its own execution state, while `Redo` shows Prolog returning to saved alternatives. Clause order determines which branch is entered first. If the first branch recurses without making progress, as in `reach/2`, depth-first search may never reach a later clause that could answer. If recursion is preceded by a goal that makes progress, as in `ancestor/2`, changing clause order can change the order of answers without changing whether the search terminates.
+In comparison with Act15, `Call` represents an active frame with execution state, while `Redo` is the saved alternatives. Clause order determines which branch is entered first. If the first branch recurses without making progress, as in `reach/2`, depth-first search may never a solution. If recursion checks a goal with progress first, as in `ancestor/2`, changing clause order can change the order of answers without changing whether the search terminates.
